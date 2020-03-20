@@ -1,0 +1,131 @@
+﻿
+@{
+    ViewData["Title"] = "Echarts";
+    Layout = "_LayoutAdminLte";
+}
+
+<section class="content-header">
+    <h1>Echarts</h1>
+</section>
+
+<section class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <div id="myechart" style="width: 100%; height: 500px;">
+
+            </div>
+        </div>
+    </div>
+</section>
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/lib/echarts/echarts.js"></script>
+<script type="text/javascript">
+    //定义类
+    function Series(type, xdata, seriesData) {
+        this.typeName = type;
+        this.xdata = xdata;
+        this.seriesData = seriesData;
+    }
+
+    var myEChart = echarts.init(document.getElementById('myechart'));
+    myEChart.clear();
+    var options = {
+        title: {
+            text: '数据曲线：',
+            x: 'center'
+        },
+        grid: {
+            show: true,
+            borderColor: '#19507c',
+            x: 50,
+            x2: 50,
+            y: 40
+        },
+        toolbox: {
+            feature: {
+                dataZoom: {
+                    yAxisIndex: 'none'
+                },
+                restore: {},
+                saveasImage: {}
+            }
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'cross',
+                animation: false,
+                label: {
+                    backgroundColor: '#505765'
+                }
+            }
+        },
+        legend: {
+            data: [],
+            x: 'left'
+        },
+        dataZoom: [
+            {
+                show: true,
+                realtime: true,
+                start: 80,
+                end: 100
+            },
+            {
+                type: 'inside',
+                realtime: true,
+                start: 65,
+                end: 100
+            }
+        ],
+        xAxis: {
+            type: 'category',
+            offset: 30
+        },
+        yAxis: {
+            type: 'value',
+            max: 90,
+            min: -10
+        },
+        series: []
+    }
+
+    myEChart.setOption(options);
+    $.get('/data.json').done(function (data) {
+
+        //var aa = JSON.parse(data);
+        var x = [];
+        $.each(data.List,
+            function (n, value) {
+                var xd = [], sd = [];
+                $.each(value.Data,
+                    function (m, mValue) {
+                        xd.push(mValue.SaveTime);
+                        sd.push(mValue.WorkStationData);
+                    });
+                var s = new Series(value.TypeTitleName, xd, sd);
+                x.push(s);
+            });
+
+        var xStart = data.Start;
+        var xEnd = data.End;
+        options.xAxis.data = x[0].xdata;
+        options.xAxis.start = xStart;
+        options.xAxis.end = xEnd;
+
+        $.each(x,
+            function (i, value) {
+                options.title.text += value.typeName + " ";
+                options.legend.data.push(value.typeName);
+                options.series.push({
+                    name: value.typeName,
+                    type: 'line',
+                    smooth: true,
+                    data: value.seriesData
+                });
+            });
+        myEChart.setOption(options);
+
+    });
+
+</script>
